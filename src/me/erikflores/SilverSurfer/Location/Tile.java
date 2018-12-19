@@ -1,7 +1,6 @@
 package me.erikflores.SilverSurfer.Location;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 
 public class Tile {
 
@@ -12,22 +11,14 @@ public class Tile {
 
     private Shape shape;
 
-    public Tile(int row, int col, int size){
+    public Tile(int row, int col, int size, int collision){
         this.row = row;
         this.col = col;
         this.location = new Location(col * size, row * size);
         this.size = size;
+        setWall(collision == 1);
 
-
-        this.shape = new Rectangle2D.Double(getLocation().getX(), getLocation().getY(), size, size);
-    }
-
-    public Tile(int row, int col){
-        this(row, col, 20);
-    }
-
-    public Tile(){
-        this(0, 0);
+        this.shape = new Rectangle(getLocation().getX(), getLocation().getY(), size, size);
     }
 
     public int getRow(){

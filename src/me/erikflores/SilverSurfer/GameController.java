@@ -1,6 +1,7 @@
 package me.erikflores.SilverSurfer;
 
 import me.erikflores.SilverSurfer.Entity.*;
+import me.erikflores.SilverSurfer.Item.Item;
 import me.erikflores.SilverSurfer.Location.*;
 
 import javax.imageio.ImageIO;
@@ -18,18 +19,21 @@ import java.util.ArrayList;
 public class GameController extends JPanel implements ActionListener {
 
     private static final int DELAY = 1000 / 60; // 60 fps
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 640;
+    private static final int SIZE = 26;
+    private static final int WIDTH = 31 * SIZE;
+    private static final int HEIGHT = 28 * SIZE;
 
     private GameState gameState = GameState.PLAYING;
 
     private Timer timer = new Timer(DELAY, this);
 
-    private ArrayList<Entity> entities = new ArrayList<>();
+    private static ArrayList<Entity> entities = new ArrayList<>();
+    private static ArrayList<Entity> entitiesToRemove = new ArrayList<>();
     private Player player;
     private TileController tileController;
 
     private Image[] sprites = new Image[64];
+    private Image map;
 
     /**
      *  Initializes the JFrame and panel
@@ -42,7 +46,7 @@ public class GameController extends JPanel implements ActionListener {
 
         frm.setTitle("Silver Surfer");
         frm.setContentPane(new GameController());
-        frm.setSize(WIDTH, HEIGHT);
+        frm.setSize(WIDTH, HEIGHT + 20);
         frm.setResizable(false);
         frm.setVisible(true);
         frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,10 +64,10 @@ public class GameController extends JPanel implements ActionListener {
 
         loadImages();
 
-        tileController = new TileController(36, 36, 20);
+        tileController = new TileController(28, 31, SIZE);
         tileController.createTiles();
 
-        player = new Player(new Location(200, 200), tileController);
+        player = new Player(new Location(200, 220), tileController);
         entities.add(player);
 
         timer.start();
@@ -74,21 +78,41 @@ public class GameController extends JPanel implements ActionListener {
         super.paintComponent(g);
         Graphics2D graphics = (Graphics2D) g;
 
-        graphics.setColor(Color.YELLOW);
-        for(Tile tile : tileController.getTiles()){
-            graphics.draw(tile.getShape());
-        }
-
         graphics.setColor(Color.BLACK);
         switch(getGameState()) {
             case MENU: break;
             case PAUSED:
             case PLAYING:
+                graphics.setBackground(Color.BLACK);
+                graphics.drawImage(map, 0, 0, null);
                 for (Entity entity : entities) {
-                    Image image = sprites[player.getImageIndex()];
+                    Image image = sprites[entity.getImageIndex()];
                     graphics.drawImage(image, entity.getLocation().getX(), entity.getLocation().getY(), null);
                 }
+                int x = WIDTH / 2 - 124;
+                int y = HEIGHT - 50;
+                int i = 0;
+                for(Item items : player.getInventory().getItems()){
+                    if(player.getInventory().getSelectedSlot() == i){ // Item border
+                        graphics.drawImage(sprites[20], x, y, null); // Selected border
+                    }else{
+                        graphics.drawImage(sprites[21], x, y, null); // Default item border
+                    }
+                    if (items != null){
+                        graphics.drawImage(sprites[items.getImageIndex()], x, y, null);
+                        graphics.setFont(new Font("Courier", Font.BOLD, 17));
+                        graphics.setColor(Color.WHITE);
+                        graphics.drawString(items.getAmount() + "", x + 30, y + 40);
+                    }
+                    x += 48;
+                    i++;
+                }
             break;
+        }
+
+        graphics.setColor(Color.YELLOW);
+        for(Tile tile : tileController.getTiles()){
+            graphics.draw(tile.getShape());
         }
     }
 
@@ -105,6 +129,7 @@ public class GameController extends JPanel implements ActionListener {
                 for(Entity entity : entities){
                     entity.tick();
                 }
+                entities.removeAll(entitiesToRemove);
             break;
         }
         repaint();
@@ -115,6 +140,7 @@ public class GameController extends JPanel implements ActionListener {
     }
     private void loadImages(){
         try{
+            map = ImageIO.read(new File("map.png")).getScaledInstance(WIDTH, HEIGHT, Image.SCALE_DEFAULT);
             BufferedImage spriteSheet = ImageIO.read(new File("spritesheet.png"));
             for(int c = 0; c < 8; c++){
                 for(int i = 0; i < 8; i++){
@@ -125,6 +151,14 @@ public class GameController extends JPanel implements ActionListener {
             System.out.println("Image not found!");
             System.exit(1);
         }
+    }
+
+    public static void addEntity(Entity entity){
+        entities.add(entity);
+    }
+
+    public static void removeEntity(Entity entity){
+        entitiesToRemove.add(entity);
     }
 
     private class InputListener implements KeyListener {
@@ -139,6 +173,11 @@ public class GameController extends JPanel implements ActionListener {
                 case KeyEvent.VK_A: player.setDirection(Direction.LEFT); break;
                 case KeyEvent.VK_S: player.setDirection(Direction.DOWN); break;
                 case KeyEvent.VK_D: player.setDirection(Direction.RIGHT); break;
+                case KeyEvent.VK_SPACE: player.attack(); break;
+                case KeyEvent.VK_1: player.getInventory().setSelected(0); break;
+                case KeyEvent.VK_2: player.getInventory().setSelected(1); break;
+                case KeyEvent.VK_3: player.getInventory().setSelected(2); break;
+                case KeyEvent.VK_4: player.getInventory().setSelected(3); break;
             }
         }
 

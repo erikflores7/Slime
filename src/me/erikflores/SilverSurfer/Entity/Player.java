@@ -1,10 +1,17 @@
 package me.erikflores.SilverSurfer.Entity;
 
+import me.erikflores.SilverSurfer.GameController;
+import me.erikflores.SilverSurfer.Item.BombItem;
+import me.erikflores.SilverSurfer.Item.Inventory;
+import me.erikflores.SilverSurfer.Item.SlimeItem;
 import me.erikflores.SilverSurfer.Location.*;
+
+import java.awt.*;
 
 public class Player extends Entity{
 
     private TileController tileController;
+    private Inventory inventory;
 
     private Direction direction = Direction.RIGHT;
     private Tile tile;
@@ -12,6 +19,7 @@ public class Player extends Entity{
     private static final int SIZE = 48;
 
     private int counter = 0;
+    private boolean attacking = false;
 
     public Player(){
         super("Player", new Location(100, 100));
@@ -21,6 +29,9 @@ public class Player extends Entity{
         super("Player", spawn);
         this.tileController = tileController;
         tile = tileController.getTileIn(getLocation());
+        inventory = new Inventory(4);
+        getInventory().addItem(new SlimeItem(6));
+        getInventory().addItem(new BombItem(2));
     }
 
     /**
@@ -29,7 +40,7 @@ public class Player extends Entity{
     @Override
     public void tick(){
         move();
-        System.out.println(toString());
+       // System.out.println(toString());
     }
 
     /**
@@ -117,12 +128,46 @@ public class Player extends Entity{
                 index++;
             }
         }else{
+            if(attacking){
+                index += 8; // Show idle animation // SPITTING
+            }
             if (counter % 16 >= 8) { // Counter to have gap between animations
                 index++;
             }
         }
         counter++;
         return index;
+    }
+
+    public Inventory getInventory(){
+        return this.inventory;
+    }
+
+    public void attack(){
+
+        getInventory().debug();
+
+        if(attacking){
+            return;
+        }
+        if(getInventory().getSelected() instanceof SlimeItem){ // Shoot slimeball
+            attacking = true;
+            counter = 20; // Start animation with mouth open and have delay
+            GameController.addEntity(new SlimeBall(getLocation(), getDirection(), 6, 7, tileController));
+            Thread t = new Thread(() -> {
+                int attackDelay = 20;
+                while(attackDelay > 0){
+                    attackDelay--;
+                    try { Thread.sleep(12); } catch(InterruptedException e) { /* we tried */}
+                }
+                attacking = false;
+            });
+            t.start();
+            getInventory().removeItem(inventory.getSelected(), 1);
+        }else if(getInventory().getSelected() instanceof BombItem){
+            GameController.addEntity(new Bomb(new Location(getLocation().getX() - (getDirection().getX() * 10),
+                                                        getLocation().getY() - (getDirection().getY() * 10))));
+        }
     }
 
     public Direction getDirection(){
@@ -137,9 +182,13 @@ public class Player extends Entity{
         this.tile = tile;
     }
 
+    public Rectangle getBounds(){
+        return new Rectangle();
+    }
+
     @Override
     public String toString() {
-        return super.toString() + " " + getDirection().toString() + "  " + getTile();
+        return super.toString() + " " + getDirection().toString() + " " + getTile();
     }
 
 }
