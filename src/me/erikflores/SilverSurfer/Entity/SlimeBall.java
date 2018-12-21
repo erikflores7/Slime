@@ -3,14 +3,18 @@ package me.erikflores.SilverSurfer.Entity;
 import me.erikflores.SilverSurfer.GameController;
 import me.erikflores.SilverSurfer.Location.*;
 
+import java.awt.*;
+
 public class SlimeBall extends Entity {
 
     private Direction direction;
     private TileController tileController;
     private int speed;
 
-    public SlimeBall(Location spawn, Direction direction, int speed, int offset, TileController tileController){
-        super("SlimeBall", spawn);
+    private static final int damage = 10;
+
+    public SlimeBall(Location spawn, Direction direction, int speed, int offset, boolean isFriendly, TileController tileController){
+        super("SlimeBall", spawn, isFriendly);
         switch (direction){
             case RIGHT:
             case IDLE_RIGHT: this.direction = Direction.RIGHT;
@@ -45,9 +49,20 @@ public class SlimeBall extends Entity {
 
     private void checkCollision(){
         // Check center of ball
-        Tile tile = tileController.getTileIn(new Location(getLocation().getX() + 24, getLocation().getY() + 24));
-        if(tile == null || tile.isWall()){ // TODO Add enemy collision
+        Tile tile = tileController.getTileIn(new Location(getLocation().getX() + GameController.SIZE / 2,
+                                                          getLocation().getY() + GameController.SIZE / 2));
+        if(tile == null || tile.isWall()){
             die();
+            return;
+        }
+        for(Entity entity : GameController.getEntities()){
+            if(entity.isFriendly() != isFriendly()){
+                if(entity.getBounds().intersects(getBounds())){
+                    entity.damage(damage);
+                    die();
+                    return;
+                }
+            }
         }
     }
 
@@ -61,10 +76,12 @@ public class SlimeBall extends Entity {
     }
 
     @Override
+    public Rectangle getBounds(){
+        return new Rectangle(getLocation().getX() + 13, getLocation().getY() + 13, 14, 14);
+    }
+
+    @Override
     public int getImageIndex(){
-        if(this.speed == 0){
-            return 63;
-        }
         return 16;
     }
 

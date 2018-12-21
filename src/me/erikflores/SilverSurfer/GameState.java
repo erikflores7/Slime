@@ -2,6 +2,6 @@ package me.erikflores.SilverSurfer;
 
 public enum GameState {
 
-    MENU, PLAYING, PAUSED
+    MENU, PLAYING, PAUSED, DEAD, SHOP
 
 }

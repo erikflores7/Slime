@@ -3,6 +3,7 @@ package me.erikflores.SilverSurfer.Entity;
 import me.erikflores.SilverSurfer.GameController;
 import me.erikflores.SilverSurfer.Item.BombItem;
 import me.erikflores.SilverSurfer.Item.Inventory;
+import me.erikflores.SilverSurfer.Item.Item;
 import me.erikflores.SilverSurfer.Item.SlimeItem;
 import me.erikflores.SilverSurfer.Location.*;
 
@@ -13,23 +14,24 @@ public class Player extends Entity{
     private TileController tileController;
     private Inventory inventory;
 
-    private Direction direction = Direction.RIGHT;
+    private Direction direction = Direction.IDLE_RIGHT;
+    private double health = 100;
+    private int reload = 0;
     private Tile tile;
     private int speed = 2;
-    private static final int SIZE = 48;
+    private final int SIZE = GameController.SIZE;
 
     private int counter = 0;
     private boolean attacking = false;
 
-    public Player(){
-        super("Player", new Location(100, 100));
-    }
-
     public Player(Location spawn, TileController tileController){
-        super("Player", spawn);
+        super("Player", spawn, true);
         this.tileController = tileController;
         tile = tileController.getTileIn(getLocation());
+
         inventory = new Inventory(4);
+
+        // Starting items
         getInventory().addItem(new SlimeItem(6));
         getInventory().addItem(new BombItem(2));
     }
@@ -40,24 +42,38 @@ public class Player extends Entity{
     @Override
     public void tick(){
         move();
-       // System.out.println(toString());
+        checkCollision();
+        if (++reload % 2600 == 0){ // Add 1 slime ball every 2600 ticks
+            getInventory().addItem(new SlimeItem(1));
+        }
     }
 
     /**
      *  Moves by SPEED in direction
      */
-    public void move(){
-        Location newLocation = new Location(getLocation().getX(), getLocation().getY());
-        newLocation.move(getDirection().getX() * getSpeed() + (SIZE / 2), // Gets center
-                        getDirection().getY() * getSpeed() + (SIZE / 2));
-
-        Tile newTile = tileController.getTileIn(newLocation);
-        if (newTile == null || newTile.isWall()){ // Don't move
+    private void move(){
+        if(isIdle()){
             return;
         }
-        newLocation.move(-(SIZE / 2), -(SIZE / 2)); // Revert back
-        setLocation(newLocation);
-        setTile(newTile);
+        if(checkWallCollision(tileController, getDirection(), getSpeed())) { // check if won't collide with wall
+            getLocation().move(getDirection().getX() * getSpeed(), getDirection().getY() * getSpeed());
+            setTile(tileController.getTileIn(getLocation()));
+        }
+    }
+
+    /**
+     * Checks if colliding with any items to pick up
+     */
+    private void checkCollision(){
+        for(Item item : GameController.getItems()){
+            if (item.getBounds().intersects(getBounds())){
+                if(!inventory.isFull()) {
+                    getInventory().addItem(item);
+                    GameController.removeItem(item);
+                }
+                return;
+            }
+        }
     }
 
     private int getSpeed(){
@@ -73,10 +89,11 @@ public class Player extends Entity{
      * @param direction Direction to set to
      */
     public void setDirection(Direction direction){
-        if(direction != getDirection()) {
-            this.direction = direction;
-            counter = 0;
+        if(direction == getDirection()){
+            return;
         }
+        this.direction = direction;
+        counter = 0;
     }
 
     /**
@@ -86,12 +103,7 @@ public class Player extends Entity{
      */
     public void removeDirection(Direction direction){
         if(!isIdle() && direction == getDirection()){
-            switch(getDirection()){
-                case UP: setDirection(Direction.IDLE_UP); break;
-                case DOWN: setDirection(Direction.IDLE_DOWN); break;
-                case LEFT: setDirection(Direction.IDLE_LEFT); break;
-                case RIGHT: setDirection(Direction.IDLE_RIGHT); break;
-            }
+            this.direction = getEquivalent(direction);
         }
     }
 
@@ -143,9 +155,20 @@ public class Player extends Entity{
         return this.inventory;
     }
 
-    public void attack(){
+    public double getHealth(){
+        return health;
+    }
 
-        getInventory().debug();
+    @Override
+    public void damage(int damage){
+        health -= damage;
+        if(getHealth() <= 0){
+
+        }
+        // TODO change sprite
+    }
+
+    public void attack(){
 
         if(attacking){
             return;
@@ -153,9 +176,9 @@ public class Player extends Entity{
         if(getInventory().getSelected() instanceof SlimeItem){ // Shoot slimeball
             attacking = true;
             counter = 20; // Start animation with mouth open and have delay
-            GameController.addEntity(new SlimeBall(getLocation(), getDirection(), 6, 7, tileController));
+            GameController.addEntity(new SlimeBall(getLocation(), getDirection(), getSpeed() + 2, 6, true, tileController));
             Thread t = new Thread(() -> {
-                int attackDelay = 20;
+                int attackDelay = 12;
                 while(attackDelay > 0){
                     attackDelay--;
                     try { Thread.sleep(12); } catch(InterruptedException e) { /* we tried */}
@@ -164,9 +187,10 @@ public class Player extends Entity{
             });
             t.start();
             getInventory().removeItem(inventory.getSelected(), 1);
-        }else if(getInventory().getSelected() instanceof BombItem){
+        }else if(getInventory().getSelected() instanceof BombItem){ // Drop bomb
             GameController.addEntity(new Bomb(new Location(getLocation().getX() - (getDirection().getX() * 10),
-                                                        getLocation().getY() - (getDirection().getY() * 10))));
+                                                        getLocation().getY() - (getDirection().getY() * 10)), tileController));
+            getInventory().removeItem(inventory.getSelected(), 1);
         }
     }
 
@@ -174,6 +198,25 @@ public class Player extends Entity{
         return this.direction;
     }
 
+    /**
+     * @param direction Direction to get
+     * @return Direction counter part moving/idle of whichever direction
+     */
+    private Direction getEquivalent(Direction direction){
+        switch(direction){
+            case IDLE_RIGHT: return Direction.RIGHT;
+            case IDLE_LEFT: return Direction.LEFT;
+            case IDLE_UP: return Direction.UP;
+            case IDLE_DOWN: return Direction.DOWN;
+            case UP: return Direction.IDLE_UP;
+            case DOWN: return Direction.IDLE_DOWN;
+            case LEFT: return Direction.IDLE_LEFT;
+            case RIGHT: return Direction.IDLE_RIGHT;
+        }
+        return null;
+    }
+
+    @Override
     public Tile getTile(){
         return this.tile;
     }
@@ -182,8 +225,31 @@ public class Player extends Entity{
         this.tile = tile;
     }
 
+    /**
+     * @return Returns rectangle surrounding the player's sprite, adjusts to better fit sprite
+     */
     public Rectangle getBounds(){
-        return new Rectangle();
+        Location bounds = new Location(getLocation());
+        int height = SIZE;
+        int width = SIZE;
+        switch(getDirection()){
+            case RIGHT:
+            case IDLE_RIGHT:
+            case LEFT:
+            case IDLE_LEFT:
+                bounds.move(0, 4);
+                height -= 5;
+                break;
+            case UP:
+            case IDLE_UP: width -= 5;
+                break;
+            case DOWN:
+            case IDLE_DOWN:
+                bounds.move(4, 0);
+                width -= 5;
+                break;
+        }
+        return new Rectangle(bounds.getX(), bounds.getY(), width, height);
     }
 
     @Override

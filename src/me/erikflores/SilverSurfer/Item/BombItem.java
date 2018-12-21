@@ -10,9 +10,4 @@ public class BombItem extends Item {
     public int getImageIndex(){
         return 17;
     }
-
-    @Override
-    public void spawn(){
-
-    }
 }

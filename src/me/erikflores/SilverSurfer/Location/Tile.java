@@ -9,7 +9,7 @@ public class Tile {
     private int row, col;
     private boolean isWall = false;
 
-    private Shape shape;
+    private Shape bounds;
 
     public Tile(int row, int col, int size, int collision){
         this.row = row;
@@ -18,7 +18,7 @@ public class Tile {
         this.size = size;
         setWall(collision == 1);
 
-        this.shape = new Rectangle(getLocation().getX(), getLocation().getY(), size, size);
+        this.bounds = new Rectangle(getLocation().getX(), getLocation().getY(), size, size);
     }
 
     public int getRow(){
@@ -41,13 +41,22 @@ public class Tile {
         this.isWall = wall;
     }
 
-    public Shape getShape(){
-        return shape;
+    public Shape getBounds(){
+        return bounds;
     }
 
      @Override
     public String toString(){
         return "Tile: (" + getColumn() + ", " + getRow() + ")";
+     }
+
+     @Override
+    public boolean equals(Object object){
+        if(object instanceof Tile) {
+            Tile other = (Tile) object;
+            return (getRow() == other.getRow() && getColumn() == other.getColumn());
+        }
+        return false;
      }
 
 }

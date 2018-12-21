@@ -22,20 +22,21 @@ public class Inventory {
      */
     public void addItem(Item item){
         if(!contains(item)){
-            if(size < maxSize){
-                getItems()[size] = item;
+            if(!isFull()){
+                getItems()[getFirstEmpty()] = item;
                 size++;
             }else{
                 getItems()[getSelectedSlot()] = item;
             }
         }else{ // Add to the item already in inventory
             for(Item items : getItems()){
-                if (items != null && items.equals(item)){
+                if (items != null && items.getName().equals(item.getName())){
                     items.add(item.getAmount());
                     return;
                 }
             }
         }
+        debug();
     }
 
     /**
@@ -59,18 +60,22 @@ public class Inventory {
      */
     private boolean contains(Item item){
         for(Item items : getItems()){
-            if (items != null && items.equals(item)){
+            if (items != null && items.getName().equals(item.getName())){
                 return true;
             }
         }
         return false;
     }
 
+    public boolean isFull(){
+        return size == maxSize;
+    }
+
     public void removeItem(Item item){
         if(contains(item)){
             int i = 0;
             for(Item items : getItems()){
-                if (items != null && items.equals(item)){
+                if (items != null && items.getName().equals(item.getName())){
                     remove(i);
                     size--;
                     return;
@@ -129,6 +134,19 @@ public class Inventory {
      */
     public void setSelected(int selected){
         this.selected = selected;
+    }
+
+    public int getFirstEmpty(){
+        if(!isFull()){
+            int i = 0;
+            for(Item item : getItems()){
+                if(item == null){
+                    return i;
+                }
+                i++;
+            }
+        }
+        return -1;
     }
 
     /**
