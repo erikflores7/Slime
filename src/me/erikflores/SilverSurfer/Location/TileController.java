@@ -44,7 +44,7 @@ public class TileController {
         return neighbors;
     }
 
-    private Tile getTileIn(int col, int row){
+    public Tile getTileIn(int col, int row){
         int index = row * cols + col;
         if (index < 0 || index >= getTiles().size()){
             return null;

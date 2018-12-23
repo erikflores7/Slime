@@ -1,10 +1,9 @@
 package me.erikflores.SilverSurfer.Entity;
 
 import me.erikflores.SilverSurfer.GameController;
-import me.erikflores.SilverSurfer.Item.BombItem;
 import me.erikflores.SilverSurfer.Item.Inventory;
 import me.erikflores.SilverSurfer.Item.Item;
-import me.erikflores.SilverSurfer.Item.SlimeItem;
+import me.erikflores.SilverSurfer.Item.ItemStack;
 import me.erikflores.SilverSurfer.Location.*;
 
 import java.awt.*;
@@ -32,8 +31,8 @@ public class Player extends Entity{
         inventory = new Inventory(4);
 
         // Starting items
-        getInventory().addItem(new SlimeItem(12));
-        getInventory().addItem(new BombItem(2));
+        getInventory().addItem(new ItemStack(Item.SLIME_BALL, 12));
+        getInventory().addItem(new ItemStack(Item.SMALL_BOMB, 2));
     }
 
     /**
@@ -43,8 +42,8 @@ public class Player extends Entity{
     public void tick(){
         move();
         checkCollision();
-        if (++reload % 2400 == 0){ // Add 1 slime ball every 2400 ticks
-            getInventory().addItem(new SlimeItem(1));
+        if (++reload % 2200 == 0){ // Add 1 slime ball every 2400 ticks
+            getInventory().addItem(new ItemStack(Item.SLIME_BALL, 1));
         }
     }
 
@@ -65,9 +64,12 @@ public class Player extends Entity{
      * Checks if colliding with any items to pick up
      */
     private void checkCollision(){
-        for(Item item : GameController.getItems()){
+        for(ItemStack item : GameController.getItems()){
             if (item.getBounds().intersects(getBounds())){
-                if(!inventory.isFull()) {
+                if(item.getType() == Item.HEALTH_PACK){
+                    setHealth(getHealth() + 20);
+                    GameController.removeItem(item);
+                }else if(!inventory.isFull()) {
                     getInventory().addItem(item);
                     GameController.removeItem(item);
                 }
@@ -159,6 +161,13 @@ public class Player extends Entity{
         return health;
     }
 
+    public void setHealth(double health){
+        this.health = health;
+        if(getHealth() > 100){
+            this.health = 100;
+        }
+    }
+
     @Override
     public void damage(int damage){
         health -= damage;
@@ -173,7 +182,10 @@ public class Player extends Entity{
         if(attacking){
             return;
         }
-        if(getInventory().getSelected() instanceof SlimeItem){ // Shoot slimeball
+        if(getInventory().getSelected() == null){
+            return;
+        }
+        if(getInventory().getSelected().getType() == Item.SLIME_BALL){ // Shoot slimeball
             attacking = true;
             counter = 20; // Start animation with mouth open and have delay
             GameController.addEntity(new SlimeBall(getLocation(), getDirection(), getSpeed() + 4, 6, true, tileController));
@@ -187,7 +199,7 @@ public class Player extends Entity{
             });
             t.start();
             getInventory().removeItem(inventory.getSelected(), 1);
-        }else if(getInventory().getSelected() instanceof BombItem){ // Drop bomb
+        }else if(getInventory().getSelected().getType() == Item.SMALL_BOMB){ // Drop bomb
             GameController.addEntity(new Bomb(new Location(getLocation().getX() - (getDirection().getX() * 10),
                                                         getLocation().getY() - (getDirection().getY() * 10)), tileController));
             getInventory().removeItem(inventory.getSelected(), 1);

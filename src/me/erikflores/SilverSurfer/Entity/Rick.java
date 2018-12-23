@@ -1,11 +1,8 @@
 package me.erikflores.SilverSurfer.Entity;
 
 import me.erikflores.SilverSurfer.GameController;
-import me.erikflores.SilverSurfer.Location.Direction;
-import me.erikflores.SilverSurfer.Location.Location;
+import me.erikflores.SilverSurfer.Location.*;
 import me.erikflores.SilverSurfer.Location.Pathfinder.PathFinder;
-import me.erikflores.SilverSurfer.Location.Tile;
-import me.erikflores.SilverSurfer.Location.TileController;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -19,16 +16,18 @@ public class Rick extends Entity {
 
     private Direction queuedDirection = null;
 
-    private double health = 10;
+    private double health;
     private int damage = 2;
     private int counter = 0;
     private int coolDown = 0;
+    private int damaged = 0;
 
     public Rick(Location spawn, int speed, Player player, TileController tileController){
         super("Rick", spawn, false);
         this.speed = speed;
         this.player = player;
         this.tileController = tileController;
+        this.health = 6 + (GameController.ROUND * 2);
     }
 
 
@@ -139,6 +138,7 @@ public class Rick extends Entity {
     @Override
     public void damage(int damage){
         health -= damage;
+        damaged = 4;
         if(health <= 0){
             GameController.addKill();
             GameController.removeEntity(this);
@@ -158,10 +158,17 @@ public class Rick extends Entity {
 
     @Override
     public int getImageIndex(){
-        if(counter % 32 >= 16){
+        if(coolDown > 0){
             return 25;
         }
-        return 25;
+        if(damaged > 0){
+            damaged--;
+            return 32;
+        }
+        if(counter % 32 >= 16){
+            return 24;
+        }
+        return 24;
     }
 
 

@@ -5,14 +5,14 @@ public class Inventory {
     private int selected = 0;
     private int size = 0;
     private int maxSize;
-    private Item[] items;
+    private ItemStack[] items;
 
     /**
      * Creates an Inventory with size amount of slots
      * @param size Max amount of slots
      */
     public Inventory(int size){
-        this.items = new Item[size];
+        this.items = new ItemStack[size];
         this.maxSize = size;
     }
 
@@ -20,29 +20,28 @@ public class Inventory {
      * Adds item to inventory if it doesn't exist or adds more to said item already in inventory
      * @param item Item to add
      */
-    public void addItem(Item item){
+    public void addItem(ItemStack item){
         if(!contains(item)){
             if(!isFull()){
-                getItems()[getFirstEmpty()] = item;
+                getItems()[getFirstEmpty()] = new ItemStack(item.getType(), item.getAmount());
                 size++;
             }else{
-                getItems()[getSelectedSlot()] = item;
+                getItems()[getSelectedSlot()] = new ItemStack(item.getType(), item.getAmount());
             }
         }else{ // Add to the item already in inventory
-            for(Item items : getItems()){
+            for(ItemStack items : getItems()){
                 if (items != null && items.getName().equals(item.getName())){
                     items.add(item.getAmount());
                     return;
                 }
             }
         }
-        debug();
     }
 
     /**
      * @return Array of items in inventory
      */
-    public Item[] getItems(){
+    public ItemStack[] getItems(){
         return this.items;
     }
 
@@ -50,7 +49,7 @@ public class Inventory {
      * @param index Slot to get
      * @return Item in slot 'index'
      */
-    private Item getItem(int index){
+    private ItemStack getItem(int index){
         return getItems()[index];
     }
 
@@ -58,8 +57,8 @@ public class Inventory {
      * @param item Item to check if contains
      * @return true if inventory contains item
      */
-    private boolean contains(Item item){
-        for(Item items : getItems()){
+    private boolean contains(ItemStack item){
+        for(ItemStack items : getItems()){
             if (items != null && items.getName().equals(item.getName())){
                 return true;
             }
@@ -71,10 +70,10 @@ public class Inventory {
         return size == maxSize;
     }
 
-    public void removeItem(Item item){
+    public void removeItem(ItemStack item){
         if(contains(item)){
             int i = 0;
-            for(Item items : getItems()){
+            for(ItemStack items : getItems()){
                 if (items != null && items.getName().equals(item.getName())){
                     remove(i);
                     size--;
@@ -99,10 +98,10 @@ public class Inventory {
      * @param item Item to remove amount from
      * @param amount Amount to remove from item
      */
-    public void removeItem(Item item, int amount){
+    public void removeItem(ItemStack item, int amount){
         if(contains(item)){
             int i = 0;
-            for(Item items : getItems()){
+            for(ItemStack items : getItems()){
                 if (items != null && items.equals(item)){
                     items.remove(amount);
                     if(items.getAmount() <= 0) {
@@ -125,7 +124,7 @@ public class Inventory {
     /**
      * @return Item that is currently selected
      */
-    public Item getSelected(){
+    public ItemStack getSelected(){
         return getItem(getSelectedSlot());
     }
 
@@ -139,7 +138,7 @@ public class Inventory {
     public int getFirstEmpty(){
         if(!isFull()){
             int i = 0;
-            for(Item item : getItems()){
+            for(ItemStack item : getItems()){
                 if(item == null){
                     return i;
                 }
@@ -149,12 +148,16 @@ public class Inventory {
         return -1;
     }
 
+    public void clear(){
+        items = new ItemStack[maxSize];
+    }
+
     /**
      * Prints out all the items in inventory and their amount
      */
     public void debug(){
         System.out.println("{");
-        for(Item items : getItems()){
+        for(ItemStack items : getItems()){
             if(items == null){
                 System.out.println("NULL, ");
             }else{

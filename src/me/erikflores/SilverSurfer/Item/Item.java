@@ -1,89 +1,35 @@
 package me.erikflores.SilverSurfer.Item;
 
-import me.erikflores.SilverSurfer.GameController;
-import me.erikflores.SilverSurfer.Location.Location;
+public enum Item {
 
-import java.awt.*;
+    SLIME_BALL("SlimeBall", 16, 99, 20), SMALL_BOMB("Small Bomb", 17, 99, 250), HEALTH_PACK("+20 Health", 22, 1, 250);
 
-public class Item {
-
-    private int amount;
     private String name;
-    private boolean alive = false;
-    private int ticks = 0;
-    private boolean goingUp = true;
-    private Location location;
+    private int imageIndex;
+    private int maxStack;
+    private int price;
 
-    private Rectangle bounds;
-
-    public Item(String name, int amount){
+    Item(String name, int imageIndex, int maxStack, int price){
         this.name = name;
-        this.amount = amount;
+        this.imageIndex = imageIndex;
+        this.maxStack = maxStack;
+        this.price = price;
     }
 
     public String getName(){
-        return name;
-    }
-
-    public int getAmount(){
-        return this.amount;
-    }
-
-    public void setAmount(int amount){
-        this.amount = amount;
-        if(getAmount() > 99){
-            this.amount = 99;
-        }
-    }
-
-    public void remove(int amount){
-        setAmount(getAmount() - amount);
-    }
-
-    public void add(int amount){
-        setAmount(getAmount() + amount);
+        return this.name;
     }
 
     public int getImageIndex(){
-        return 0;
+        return this.imageIndex;
     }
 
-    public void spawn(Location location){
-        alive = true;
-        GameController.addItem(this);
-        this.location = location;
-        bounds = new Rectangle(getLocation().getX() + 12, getLocation().getY() + 12, 14, 14);
+    public int getMaxStack(){
+        return this.maxStack;
     }
 
-    public Location getLocation(){
-        return location;
-    }
-
-    public void tick(){
-        if(alive){ // Bounce up and down
-            int modifier = 1;
-            if(!goingUp){
-                modifier = -1;
-            }
-            if(ticks % 10 == 0) {
-                location.move(0, modifier);
-            }
-            ticks += modifier;
-            if(ticks == 0){
-                goingUp = true;
-            }else if(ticks == 100){
-                goingUp = false;
-            }
-        }
-    }
-
-    public Rectangle getBounds(){
-        return bounds;
-    }
-
-    @Override
-    public String toString(){
-        return name + ": " + getAmount();
+    public int getPrice(){
+        return this.price;
     }
 
 }

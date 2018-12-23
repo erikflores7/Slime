@@ -1,7 +1,6 @@
 package me.erikflores.SilverSurfer.Entity;
 
 import me.erikflores.SilverSurfer.GameController;
-import me.erikflores.SilverSurfer.Location.Direction;
 import me.erikflores.SilverSurfer.Location.Location;
 import me.erikflores.SilverSurfer.Location.Tile;
 import me.erikflores.SilverSurfer.Location.TileController;
@@ -12,8 +11,7 @@ import java.util.ArrayList;
 public class Bomb extends Entity{
 
     private int ticksToExplode = 60;
-    private int radius = 4;
-    private int damage = 10;
+    private int damage = 25;
 
     private TileController tileController;
 
@@ -37,22 +35,17 @@ public class Bomb extends Entity{
 
     private void checkCollision(){
 
-        // Check 4 directions and add those tiles, stop if hit a wall // TODO adjust to new system of multiple tiles in one lane
         ArrayList<Tile> tiles = new ArrayList<>();
-        Direction[] directions = Direction.values();
         Tile baseTile = tileController.getTileIn(new Location(getLocation().getX() + GameController.SIZE / 2,
                                                         getLocation().getY() + GameController.SIZE / 2)); // CENTER
-        Tile currentTile = baseTile;
-        for(int i = 4; i < directions.length; i++){
-            Direction direction = directions[i];
-            for(int j = 0; j < radius; j++){
-                currentTile = tileController.getNeighbor(currentTile, direction);
-                if(currentTile == null || currentTile.isWall()){ // If hit a wall or null, stop checking in that dir
-                    break;
+        for(int x = -1; x < 1; x++){
+            for(int y = -1; y < 1; y++){
+                Tile neighbor = tileController.getTileIn(baseTile.getColumn() + x, baseTile.getRow() + y);
+                if(neighbor == null || neighbor.isWall()){
+                    continue;
                 }
-                tiles.add(currentTile);
+                tiles.add(neighbor);
             }
-            currentTile = baseTile;
         }
         tiles.add(baseTile);
 
