@@ -37,7 +37,7 @@ public class Bomb extends Entity{
 
     private void checkCollision(){
 
-        // Check 4 directions and add those tiles, stop if hit a wall
+        // Check 4 directions and add those tiles, stop if hit a wall // TODO adjust to new system of multiple tiles in one lane
         ArrayList<Tile> tiles = new ArrayList<>();
         Direction[] directions = Direction.values();
         Tile baseTile = tileController.getTileIn(new Location(getLocation().getX() + GameController.SIZE / 2,

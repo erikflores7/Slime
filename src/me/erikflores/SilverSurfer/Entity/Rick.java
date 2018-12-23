@@ -3,68 +3,76 @@ package me.erikflores.SilverSurfer.Entity;
 import me.erikflores.SilverSurfer.GameController;
 import me.erikflores.SilverSurfer.Location.Direction;
 import me.erikflores.SilverSurfer.Location.Location;
+import me.erikflores.SilverSurfer.Location.Pathfinder.PathFinder;
 import me.erikflores.SilverSurfer.Location.Tile;
 import me.erikflores.SilverSurfer.Location.TileController;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Rick extends Entity {
 
     private int speed;
-    private Direction direction;
+    private Direction direction = null;
     private TileController tileController;
     private Player player;
+
+    private Direction queuedDirection = null;
 
     private double health = 10;
     private int damage = 2;
     private int counter = 0;
-    private int cooldown = 0;
+    private int coolDown = 0;
 
     public Rick(Location spawn, int speed, Player player, TileController tileController){
         super("Rick", spawn, false);
         this.speed = speed;
         this.player = player;
         this.tileController = tileController;
-        setDirection(Direction.DOWN);
     }
 
 
     @Override
     public void tick(){
-        if(cooldown == 0) {
+        if(coolDown == 0) {
             move();
             checkCollision();
             counter++;
         }else{
-            cooldown--;
+            coolDown--;
         }
     }
 
     private void move(){
-        Direction[] possibleDirections = {Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP};
-        int x = getLocation().getX();
-        int y = getLocation().getY();
-        Tile tile = tileController.getTileIn(new Location(x + GameController.SIZE / 2, y + GameController.SIZE / 2)); // Get center
 
-        double bestDistance = 10000;
-
-
-        for(Direction direction : possibleDirections){
-            /*Tile newTile = tileController.getNeighbor(tile, direction);
-            if(newTile == null || newTile.isWall()){
-                continue;
-            }*/
-            if(!checkWallCollision(tileController, direction, speed)){
-                continue;
+        if(queuedDirection != null){
+            if(!checkWallCollision(queuedDirection)){ // Check if can finally change direction without colliding
+                getLocation().move(getDirection().getX() * speed, getDirection().getY() * speed);
+                return;
+            }else{ // If so, change direction
+                setDirection(queuedDirection);
+                queuedDirection = null;
             }
-            double xDiff = (player.getLocation().getX() - (x + direction.getX() * speed));
-            double yDiff = player.getLocation().getY() - (y + direction.getY() * speed);
-            double distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
-            if(distance < bestDistance){
-                bestDistance = distance;
-                setDirection(direction);
-            }else if(distance == bestDistance){
-                // TODO take random or something
+        }
+
+        Direction[] possibleDirections = {Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP};
+
+        PathFinder path = new PathFinder(tileController, player.getTile(), getTile()); // TODO save this and limit how many checks there are
+        ArrayList<Tile> tilePath = path.getPath();
+
+        if(tilePath.size() > 2) { // 2 means it is on the player
+            Tile nextTile = tilePath.get(tilePath.size() - 3); // Tile after the starting
+            for (Direction direction : possibleDirections) {
+                if (tileController.getNeighbor(getTile(), direction).equals(nextTile)) { // Find direction to get to nextTile
+                    if(getDirection() == null){ // start
+                        setDirection(direction);
+                        break;
+                    }
+                    if(direction != getDirection()){
+                        queuedDirection = direction;
+                    }
+                    break;
+                }
             }
         }
         getLocation().move(getDirection().getX() * speed, getDirection().getY() * speed);
@@ -78,13 +86,54 @@ public class Rick extends Entity {
         this.direction = direction;
     }
 
+    /**
+     * Check collision with players, damage them, and stop for 10 ticks
+     */
     private void checkCollision(){
         for(Entity entity : GameController.getEntities()){
             if(entity instanceof Player && entity.getBounds().intersects(getBounds())){
                 entity.damage(damage);
-                cooldown = 10;
+                coolDown = 10;
             }
         }
+    }
+
+    /**
+     * Adjusted version of Entity's as AI will only try to change direction when it has to unlike player
+     *  Allows us to check neighboring tiles for walls
+     * @param direction Direction to check
+     * @return True if there is no colliding wall
+     */
+    private boolean checkWallCollision(Direction direction){
+        Rectangle bounds = getBounds();
+        int width = (int) bounds.getWidth();
+        int height = (int) bounds.getHeight();
+        Location corner1 = new Location((int) bounds.getX(),(int) bounds.getY());
+        Location corner2 = new Location(corner1);
+
+        switch(direction){ // Adjust depending on which way facing
+            case UP:
+                corner1.move(0, 0);
+                corner2.move(width, 0);
+                break;
+            case DOWN: corner1.move(0, height);
+                corner2.move(width, height);
+                break;
+            case LEFT:
+                corner1.move(0, 0);
+                corner2.move(0, height);
+                break;
+            case RIGHT: corner1.move(width, 0);
+                corner2.move(width, height);
+                break;
+        }
+
+        Tile firsTile = tileController.getNeighbor(tileController.getTileIn(corner1), direction);
+        if(firsTile == null || firsTile.isWall()){
+            return false;
+        }
+        Tile secondTile = tileController.getNeighbor(tileController.getTileIn(corner2), direction);
+        return !(secondTile == null || secondTile.isWall());
     }
 
     @Override

@@ -11,6 +11,10 @@ public class Tile {
 
     private Shape bounds;
 
+    private int h;
+    private int g;
+    private Tile parent;
+
     public Tile(int row, int col, int size, int collision){
         this.row = row;
         this.col = col;
@@ -57,6 +61,35 @@ public class Tile {
             return (getRow() == other.getRow() && getColumn() == other.getColumn());
         }
         return false;
-     }
+    }
+
+    public void updateH(Tile playerTile){
+        this.h = Math.abs((playerTile.getColumn() - getColumn()) + (playerTile.getRow() - getRow()));
+    }
+
+    public void updateGCost(int gCost){
+        this.g = gCost;
+    }
+
+    public int getH(){
+        return this.h;
+    }
+
+    public int getG(){
+        return this.g;
+    }
+
+    public int getFCost(){
+        return h + g;
+    }
+
+    public Tile getParent(){
+        return parent;
+    }
+
+    public void setParent(Tile parent){
+        this.parent = parent;
+    }
+
 
 }

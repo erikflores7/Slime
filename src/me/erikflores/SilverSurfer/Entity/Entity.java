@@ -86,7 +86,7 @@ public class Entity {
             return false;
         }
         Tile secondTile = tileController.getTileIn(corner2);
-        return !(secondTile == null || secondTile.isWall());
+        return !(secondTile == null || secondTile.isWall()); // TODO Add a center check or move in a bit closer
     }
 
     public Tile getTile(){

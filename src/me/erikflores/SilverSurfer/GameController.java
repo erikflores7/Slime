@@ -3,7 +3,6 @@ package me.erikflores.SilverSurfer;
 import me.erikflores.SilverSurfer.Entity.*;
 import me.erikflores.SilverSurfer.Item.BombItem;
 import me.erikflores.SilverSurfer.Item.Item;
-import me.erikflores.SilverSurfer.Item.SlimeItem;
 import me.erikflores.SilverSurfer.Location.*;
 
 import javax.imageio.ImageIO;
@@ -13,12 +12,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class GameController extends JPanel implements ActionListener {
 
@@ -47,6 +44,7 @@ public class GameController extends JPanel implements ActionListener {
     private static ArrayList<Item> itemsToRemove = new ArrayList<>();
 
     private Player player;
+
     private TileController tileController;
 
     private Image[] sprites = new Image[64];
@@ -63,7 +61,7 @@ public class GameController extends JPanel implements ActionListener {
 
         frm.setTitle("Silver Surfer");
         frm.setContentPane(new GameController());
-        frm.setSize(WIDTH, HEIGHT + 20);
+        frm.setSize(WIDTH + 13, HEIGHT + 33);
         frm.setResizable(false);
         frm.setVisible(true);
         frm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -84,7 +82,7 @@ public class GameController extends JPanel implements ActionListener {
         tileController = new TileController(29, 32, TILE_SIZE);
         tileController.createTiles();
 
-        player = new Player(new Location(200, 220), tileController);
+        player = new Player(new Location(200, 240), tileController);
         getEntities().add(player);
 
         timer.start();
@@ -107,6 +105,7 @@ public class GameController extends JPanel implements ActionListener {
                 for(Tile tile : tileController.getTiles()){
                     graphics.draw(tile.getBounds());
                 }
+
                 for (Entity entity : getEntities()) {
                     Image image = sprites[entity.getImageIndex()];
                     graphics.drawImage(image, entity.getLocation().getX(), entity.getLocation().getY(), null);
@@ -120,7 +119,7 @@ public class GameController extends JPanel implements ActionListener {
                 drawHUD(graphics);
                 if(paused){
                     graphics.setColor(new Color(100, 100, 100, 210));
-                    graphics.fill(new Rectangle(0, 0, WIDTH, HEIGHT));
+                    graphics.fill(new Rectangle(0, 0, WIDTH + 13, HEIGHT + 13));
                 }
 
                 break;
@@ -153,8 +152,8 @@ public class GameController extends JPanel implements ActionListener {
                 enemyTimer++;
                 spawnTimer--;
                 if(enemyTimer % 180 == 0 && (enemyTimer / 90) <= (ROUND * 2 + 4)){ // Make sure not all enemies have been spawned for this wave
-                    getEntities().add(new Rick(new Location(WIDTH / 2 - 40, 10), 1, player, tileController));
-                    getEntities().add(new Rick(new Location(WIDTH / 2 - 40, HEIGHT - 20), 1, player, tileController));
+                    getEntities().add(new Rick(new Location(WIDTH / 2 - 30, 20), 1, player, tileController));
+                    getEntities().add(new Rick(new Location(WIDTH / 2 - 30, HEIGHT - 30), 1, player, tileController));
                 }
                 // Spawn an item on a random tile for player to be able to pick up
                 if(spawnTimer == 0){

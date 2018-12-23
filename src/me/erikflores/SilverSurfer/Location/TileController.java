@@ -1,6 +1,7 @@
 package me.erikflores.SilverSurfer.Location;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class TileController {
@@ -30,7 +31,20 @@ public class TileController {
         return getTileIn(col, row);
     }
 
-    public Tile getTileIn(int col, int row){
+    public List<Tile> getNeighbors(Tile tile){
+        List<Tile> neighbors = new ArrayList<>();
+        for(int x = -1; x <= 1; x++){
+            for(int y = -1; y <= 1; y++){
+                if(x == y || x + y == 0){ // Center tile/corner tiles ignore
+                    continue;
+                }
+                neighbors.add(getTileIn(tile.getColumn() + x, tile.getRow() + y));
+            }
+        }
+        return neighbors;
+    }
+
+    private Tile getTileIn(int col, int row){
         int index = row * cols + col;
         if (index < 0 || index >= getTiles().size()){
             return null;

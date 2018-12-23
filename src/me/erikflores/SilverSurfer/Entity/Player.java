@@ -27,12 +27,12 @@ public class Player extends Entity{
     public Player(Location spawn, TileController tileController){
         super("Player", spawn, true);
         this.tileController = tileController;
-        tile = tileController.getTileIn(getLocation());
+        tile = tileController.getTileIn(new Location(getLocation().getX() + SIZE / 2, getLocation().getY() + SIZE / 2));
 
         inventory = new Inventory(4);
 
         // Starting items
-        getInventory().addItem(new SlimeItem(6));
+        getInventory().addItem(new SlimeItem(12));
         getInventory().addItem(new BombItem(2));
     }
 
@@ -43,7 +43,7 @@ public class Player extends Entity{
     public void tick(){
         move();
         checkCollision();
-        if (++reload % 2600 == 0){ // Add 1 slime ball every 2600 ticks
+        if (++reload % 2400 == 0){ // Add 1 slime ball every 2400 ticks
             getInventory().addItem(new SlimeItem(1));
         }
     }
@@ -57,7 +57,7 @@ public class Player extends Entity{
         }
         if(checkWallCollision(tileController, getDirection(), getSpeed())) { // check if won't collide with wall
             getLocation().move(getDirection().getX() * getSpeed(), getDirection().getY() * getSpeed());
-            setTile(tileController.getTileIn(getLocation()));
+            setTile(tileController.getTileIn(new Location(getLocation().getX() + SIZE / 2, getLocation().getY() + SIZE / 2)));
         }
     }
 
@@ -165,7 +165,7 @@ public class Player extends Entity{
         if(getHealth() <= 0){
 
         }
-        // TODO change sprite
+        // TODO change sprite and die if dead
     }
 
     public void attack(){
@@ -176,7 +176,7 @@ public class Player extends Entity{
         if(getInventory().getSelected() instanceof SlimeItem){ // Shoot slimeball
             attacking = true;
             counter = 20; // Start animation with mouth open and have delay
-            GameController.addEntity(new SlimeBall(getLocation(), getDirection(), getSpeed() + 2, 6, true, tileController));
+            GameController.addEntity(new SlimeBall(getLocation(), getDirection(), getSpeed() + 4, 6, true, tileController));
             Thread t = new Thread(() -> {
                 int attackDelay = 12;
                 while(attackDelay > 0){
@@ -194,7 +194,7 @@ public class Player extends Entity{
         }
     }
 
-    public Direction getDirection(){
+    private Direction getDirection(){
         return this.direction;
     }
 
